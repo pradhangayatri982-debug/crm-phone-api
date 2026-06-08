@@ -56,6 +56,37 @@ app.get("/", (req, res) => {
   res.json({ message: "CRM Phone API is running ✅", version: "1.0.0" });
 });
 
+// Widget script endpoint
+app.get("/widget.js", (req, res) => {
+  res.setHeader("Content-Type", "application/javascript");
+  res.send(`
+    (function() {
+      fetch('https://crm-phone-api-production.up.railway.app/api/phone')
+        .then(r => r.json())
+        .then(data => {
+          if (!data.success) return;
+          const num = data.data.number;
+          const clean = num.replace(/[^0-9]/g, '');
+          const div = document.createElement('div');
+          div.style = 'display:flex;gap:10px;align-items:center;';
+          div.innerHTML = \`
+            <a href="https://wa.me/\${clean}?text=Hello" target="_blank"
+               style="background:#25D366;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-family:sans-serif;">
+               WhatsApp
+            </a>
+            <a href="tel:\${num}"
+               style="background:#eee;color:#333;padding:10px 20px;border-radius:8px;text-decoration:none;font-family:sans-serif;">
+               Call \${num}
+            </a>
+          \`;
+          document.currentScript
+            ? document.currentScript.parentNode.insertBefore(div, document.currentScript)
+            : document.body.appendChild(div);
+        });
+    })();
+  `);
+});
+
 app.listen(PORT, () => {
   console.log(`✅ API is running at http://localhost:${PORT}`);
   console.log(`📞 Get phone: GET  http://localhost:${PORT}/api/phone`);
